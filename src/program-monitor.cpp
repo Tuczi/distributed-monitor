@@ -14,7 +14,12 @@ void program_monitor::add(const distributed_mutex&) {
 void program_monitor::remove(const distributed_mutex&) {
 }
 
-void run() {
+void program_monitor::run() {
+	monitor_thread = std::thread([&]()->void {
+		while(true) {
+			std::cout << "A\n";
+		}
+	});
 }
 
 }

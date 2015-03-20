@@ -1,4 +1,4 @@
-CXX=g++
+CXX=/usr/lib64/openmpi/bin/mpic++
 CXXFLAGS=-g -Wall -Wextra --std=c++11
 LFLAGS=
 
