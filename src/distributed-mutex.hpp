@@ -22,8 +22,9 @@ class distributed_mutex {
 		responce_t(uint32_t resource_id, logic_clock ts): resource_id(resource_id), ts(ts) { }
 	};
 	
+	public:
+		uint32_t resource_id;//TODO move to private
 	private:
-		uint32_t resource_id;
 		logic_clock clock;
 		logic_clock request_ts;
 		bool waiting;

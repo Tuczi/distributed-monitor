@@ -13,7 +13,11 @@ class logic_clock {
 		uint32_t value=0;
 		
 	public:
-		void update(const logic_clock& clock) {
+		inline void update() {
+			value++;
+		}
+		
+		inline void update(const logic_clock& clock) {
 			value=clock.value;
 		}
 		
