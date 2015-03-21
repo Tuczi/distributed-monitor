@@ -11,23 +11,40 @@
 #include "distributed-mutex.hpp"
 
 namespace distributed_monitor {
-	
+class distributed_mutex;
+
 class program_monitor {
+	friend distributed_mutex;
 	private:
-		int tag;
-		std::thread m_thread;
-		std::mutex m_mutex;
-		std::unordered_map<uint32_t, distributed_mutex&> mutexes;
+		const MPI::Intracomm& comm;
+		const int tag;
+		
+		std::thread l_thread;
+		std::mutex l_mutex;
+		std::unordered_map<uint32_t, distributed_mutex&> d_mutexes;
 		
 		void receive_msg();
-		inline void notify(distributed_mutex& mutex) {
-			mutex.on_notify();
+		void notify(distributed_mutex&);
+		
+		template <typename t>
+		void send(const t& data, int to) {
+			comm.Send(&data, sizeof(t), MPI_BYTE, to, tag);
+		}
+		
+		template <typename t> 
+		void broadcast(const t& data) {
+			const int size = comm.Get_size(), rank = comm.Get_rank();
+			
+			for(int i=0; i<rank; i++)
+				send(data, i);
+			for(int i=rank+1; i<size; i++)
+				send(data, i);
 		}
 		
 	public:
-		program_monitor(int tag): tag(tag) { }
+		program_monitor(int tag, const MPI::Intracomm& comm=MPI::COMM_WORLD): tag(tag), comm(comm) { }
 		~program_monitor() { 
-			m_thread.join();
+			l_thread.join();
 		}
 		
 		void add(distributed_mutex&);

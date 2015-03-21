@@ -9,13 +9,13 @@ void program_monitor::receive_msg() {
 	MPI::Status status;
 	comm.Recv(&data, sizeof(data), MPI_BYTE, MPI_ANY_SOURCE, tag, status);
 	
-	m_mutex.lock();
+	l_mutex.lock();
 	
-	auto it = mutexes.find(data.resource_id);
+	auto it = d_mutexes.find(data.resource_id);
 	switch(data.type) {
 		case distributed_mutex::mpi_serial_t::type_t::REQUEST:
 			
-			if(it == mutexes.end()) {
+			if(it == d_mutexes.end()) {
 				//TODO response - create static mutex method 
 				data.type=distributed_mutex::mpi_serial_t::type_t::RESPONSE;//TODO correct ts
 				comm.Send(&data, sizeof(data), MPI_BYTE, status.Get_source(), tag);
@@ -38,28 +38,33 @@ void program_monitor::receive_msg() {
 			}
 	}
 
-	m_mutex.unlock();
+	l_mutex.unlock();
 }
 
 void program_monitor::add(distributed_mutex& mutex) {
-	m_mutex.lock();
+	l_mutex.lock();
 	
-	mutexes.emplace(mutex.resource_id, mutex);
-	mutex.tag=tag;
+	d_mutexes.emplace(mutex.resource_id, mutex);
+	mutex.p_monitor=this;
+	mutex.waiting_for_respose.resize(comm.Get_size());
 	
-	m_mutex.unlock();
+	l_mutex.unlock();
 }
 
 void program_monitor::remove(const distributed_mutex& mutex) {
-	m_mutex.lock();
+	l_mutex.lock();
 	
-	mutexes.erase(mutex.resource_id);
+	d_mutexes.erase(mutex.resource_id);
 	
-	m_mutex.unlock();
+	l_mutex.unlock();
+}
+
+void program_monitor::notify(distributed_mutex& mutex) {
+	mutex.on_notify();
 }
 
 void program_monitor::run() {
-	m_thread = std::thread([&]()->void {
+	l_thread = std::thread([&]()->void {
 		while(true) {
 			this->receive_msg();
 		}

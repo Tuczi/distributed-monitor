@@ -5,7 +5,7 @@ namespace distributed_monitor {
 void distributed_mutex::request() {
 	clock.update();
 	request_ts = clock;
-	broadcast(mpi_serial_t(mpi_serial_t::type_t::REQUEST, resource_id, request_ts));
+	p_monitor->broadcast(mpi_serial_t(mpi_serial_t::type_t::REQUEST, resource_id, request_ts));
 	
 	waiting = true;
 }
@@ -21,7 +21,7 @@ void distributed_mutex::response() {
 			waiting_for_respose[i]=false;
 			
 			request_ts = clock;
-			send(mpi_serial_t(mpi_serial_t::type_t::RESPONSE, resource_id, request_ts), i);
+			p_monitor->send(mpi_serial_t(mpi_serial_t::type_t::RESPONSE, resource_id, request_ts), i);
 		}
 	}
 	

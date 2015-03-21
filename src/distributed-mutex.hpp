@@ -6,6 +6,7 @@
 #include <condition_variable>
 #include <mpi.h>
 
+#include "program-monitor.hpp"
 #include "logic-clock.hpp"
 
 namespace distributed_monitor {
@@ -27,33 +28,16 @@ class distributed_mutex {
 		mpi_serial_t(type_t type, uint32_t resource_id, logic_clock ts): type(type), resource_id(resource_id), ts(ts) { }
 	};
 	
-	public:
-		uint32_t resource_id;//TODO move to private
 	private:
+		uint32_t resource_id;//TODO move to private
+		program_monitor* p_monitor = nullptr;
+		std::condition_variable condition;
+		
 		logic_clock clock;
 		logic_clock request_ts;
 		bool waiting=false;
 		uint32_t response_counter=0;
 		std::vector<bool> waiting_for_respose;
-		int tag=-1;
-		std::condition_variable condition;
-		
-		template <typename t>
-		void send(const t& data, int to) {
-			const auto& comm = MPI::COMM_WORLD;
-			comm.Send(&data, sizeof(t), MPI_BYTE, to, tag);
-		}
-		
-		template <typename t> 
-		void broadcast(const t& data) {
-			const auto& comm = MPI::COMM_WORLD;
-			const int size = comm.Get_size(), rank = comm.Get_rank();
-			
-			for(int i=0; i<rank; i++)
-				send(data, i);
-			for(int i=rank+1; i<size; i++)
-				send(data, i);
-		}
 		
 		void request();//TODO return wakup_variable
 		bool can_enter();
@@ -62,7 +46,7 @@ class distributed_mutex {
 		void on_notify();
 		
 	public:
-		distributed_mutex(uint32_t resource_id): resource_id(resource_id), waiting_for_respose(MPI::COMM_WORLD.Get_size()) { }
+		distributed_mutex(uint32_t resource_id): resource_id(resource_id) { }
 		
 		void lock();
 		void unlock();

@@ -2,7 +2,7 @@
 #include <mpi.h>
 #include <iostream>
 
-#include "program-monitor.hpp"
+#include "distributed-monitor.hpp"
 
 int application_thread(int&, char**&);
 
