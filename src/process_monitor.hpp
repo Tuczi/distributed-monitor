@@ -1,5 +1,5 @@
-#ifndef PROGRAM_MONITOR_HPP_DEFINED
-#define PROGRAM_MONITOR_HPP_DEFINED
+#ifndef PROCESS_MONITOR_HPP_DEFINED
+#define PROCESS_MONITOR_HPP_DEFINED
 
 #include <thread>
 #include <mutex>
@@ -8,12 +8,12 @@
 #include <iostream>
 #include <mpi.h>
 
-#include "distributed-mutex.hpp"
+#include "distributed_mutex.hpp"
 
 namespace distributed_monitor {
 class distributed_mutex;
 
-class program_monitor {
+class process_monitor {
 	friend distributed_mutex;
 	private:
 		const MPI::Intracomm& comm;
@@ -42,8 +42,8 @@ class program_monitor {
 		}
 		
 	public:
-		program_monitor(int tag, const MPI::Intracomm& comm=MPI::COMM_WORLD): tag(tag), comm(comm) { }
-		~program_monitor() { 
+		process_monitor(int tag, const MPI::Intracomm& comm=MPI::COMM_WORLD): tag(tag), comm(comm) { }
+		~process_monitor() { 
 			l_thread.join();
 		}
 		

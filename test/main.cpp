@@ -4,9 +4,9 @@
 #include <unistd.h>
 #include <mutex>
 
-#include "../src/distributed-monitor.hpp"
+#include "../src/distributed_monitor.hpp"
 
-static distributed_monitor::program_monitor monitor(100);
+static distributed_monitor::process_monitor monitor(100);
 
 class simple_monitor_t {
 	public:

@@ -6,15 +6,15 @@
 #include <condition_variable>
 #include <mpi.h>
 
-#include "program-monitor.hpp"
-#include "logic-clock.hpp"
+#include "process_monitor.hpp"
+#include "logic_clock.hpp"
 
 namespace distributed_monitor {
-class program_monitor;//forward declaration
+class process_monitor;//forward declaration
 
 // http://en.wikipedia.org/wiki/Ricart%E2%80%93Agrawala_algorithm
 class distributed_mutex {
-	friend program_monitor;
+	friend process_monitor;
 	struct mpi_serial_t {
 		enum type_t: uint8_t {
 			REQUEST=1, RESPONSE
@@ -30,7 +30,7 @@ class distributed_mutex {
 	
 	private:
 		uint32_t resource_id;
-		program_monitor* p_monitor = nullptr;
+		process_monitor* p_monitor = nullptr;
 		
 		std::mutex l_mutex;
 		std::condition_variable l_condition;

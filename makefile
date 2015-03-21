@@ -6,7 +6,7 @@ LFLAGS=
 ODIR=obj
 SDIR=src
 
-_OBJS=program-monitor.o distributed-mutex.o
+_OBJS=process_monitor.o distributed_mutex.o
 
 OBJS=$(patsubst %,$(ODIR)/%,$(_OBJS))
 

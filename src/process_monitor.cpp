@@ -1,8 +1,8 @@
-#include "program-monitor.hpp"
+#include "process_monitor.hpp"
 
 namespace distributed_monitor {
 
-void program_monitor::receive_msg() {
+void process_monitor::receive_msg() {
 	const auto& comm = MPI::COMM_WORLD;
 	
 	distributed_mutex::mpi_serial_t data;
@@ -38,7 +38,7 @@ void program_monitor::receive_msg() {
 	}
 }
 
-void program_monitor::add(distributed_mutex& mutex) {
+void process_monitor::add(distributed_mutex& mutex) {
 	std::lock_guard<std::mutex> guard(l_mutex);
 	
 	d_mutexes.emplace(mutex.resource_id, mutex);
@@ -46,17 +46,17 @@ void program_monitor::add(distributed_mutex& mutex) {
 	mutex.waiting_for_respose.resize(comm.Get_size());
 }
 
-void program_monitor::remove(const distributed_mutex& mutex) {
+void process_monitor::remove(const distributed_mutex& mutex) {
 	std::lock_guard<std::mutex> guard(l_mutex);
 	
 	d_mutexes.erase(mutex.resource_id);
 }
 
-void program_monitor::notify(distributed_mutex& mutex) {
+void process_monitor::notify(distributed_mutex& mutex) {
 	mutex.on_notify();
 }
 
-void program_monitor::run() {
+void process_monitor::run() {
 	l_thread = std::thread([&]()->void {
 		while(true) {
 			this->receive_msg();

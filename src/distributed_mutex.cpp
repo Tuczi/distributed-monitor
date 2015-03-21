@@ -1,4 +1,4 @@
-#include "distributed-mutex.hpp"
+#include "distributed_mutex.hpp"
 
 namespace distributed_monitor {
 
