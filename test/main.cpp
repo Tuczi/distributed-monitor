@@ -20,9 +20,9 @@ class simple_monitor_t {
 			std::lock_guard<distributed_monitor::distributed_mutex> guard(d_mutex);
 			
 			const auto& comm = MPI::COMM_WORLD;
-			std::cout<<comm.Get_rank()<<"In critical section"<<std::endl;
+			std::cout<<comm.Get_rank()<<" doSth - in critical section"<<std::endl;
 			sleep(5);	
-			std::cout<<comm.Get_rank()<<"Exiting critical section"<<std::endl;
+			std::cout<<comm.Get_rank()<<" doSth - exiting critical section"<<std::endl;
 			
 		}
 		
@@ -30,9 +30,9 @@ class simple_monitor_t {
 			std::lock_guard<distributed_monitor::distributed_mutex> guard(d_mutex);
 			
 			const auto& comm = MPI::COMM_WORLD;
-			std::cout<<comm.Get_rank()<<"In critical section"<<std::endl;
+			std::cout<<comm.Get_rank()<<" doSth2 - in critical section"<<std::endl;
 			sleep(5);	
-			std::cout<<comm.Get_rank()<<"Exiting critical section"<<std::endl;
+			std::cout<<comm.Get_rank()<<" doSth2 - exiting critical section"<<std::endl;
 		}
 };
 
