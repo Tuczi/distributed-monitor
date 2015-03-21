@@ -23,9 +23,8 @@ void program_monitor::receive_msg() {
 					it->second.waiting_for_respose[status.Get_source()] = true;
 				else {
 					data.type=distributed_mutex::mpi_serial_t::type_t::RESPONSE;
-					auto clock& = data.ts=it->second.clock;
-					clock.update();
-					data.ts=clock;
+					it->second.clock.update();
+					data.ts=it->second.clock;
 					comm.Send(&data, sizeof(data), MPI_BYTE, status.Get_source(), tag);
 				}
 			}

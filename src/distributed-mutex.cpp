@@ -29,12 +29,15 @@ void distributed_mutex::response() {
 }
 
 void distributed_mutex::on_notify() {
-	//TODO
+	l_condition.notify_one();
 }
 
 void distributed_mutex::lock() {
 	request();
-	while(!can_enter());
+	std::unique_lock<std::mutex> lk(l_mutex);
+	l_condition.wait(lk, [this]()-> bool {
+		this->can_enter();
+	});
 }
 
 void distributed_mutex::unlock() {

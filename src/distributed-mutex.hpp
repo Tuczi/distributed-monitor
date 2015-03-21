@@ -31,7 +31,9 @@ class distributed_mutex {
 	private:
 		uint32_t resource_id;
 		program_monitor* p_monitor = nullptr;
-		std::condition_variable condition;
+		
+		std::mutex l_mutex;
+		std::condition_variable l_condition;
 		
 		logic_clock clock;
 		logic_clock request_ts;
