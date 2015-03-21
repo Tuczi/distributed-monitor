@@ -29,7 +29,7 @@ class distributed_mutex {
 	};
 	
 	private:
-		uint32_t resource_id;//TODO move to private
+		uint32_t resource_id;
 		program_monitor* p_monitor = nullptr;
 		std::condition_variable condition;
 		
@@ -39,7 +39,7 @@ class distributed_mutex {
 		uint32_t response_counter=0;
 		std::vector<bool> waiting_for_respose;
 		
-		void request();//TODO return wakup_variable
+		void request();
 		bool can_enter();
 		void response();
 		

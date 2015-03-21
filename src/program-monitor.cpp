@@ -16,15 +16,16 @@ void program_monitor::receive_msg() {
 		case distributed_mutex::mpi_serial_t::type_t::REQUEST:
 			
 			if(it == d_mutexes.end()) {
-				//TODO response - create static mutex method 
-				data.type=distributed_mutex::mpi_serial_t::type_t::RESPONSE;//TODO correct ts
+				data.type = distributed_mutex::mpi_serial_t::type_t::RESPONSE;
 				comm.Send(&data, sizeof(data), MPI_BYTE, status.Get_source(), tag);
-				
 			} else {
 				if(it->second.waiting && it->second.request_ts < data.ts)
 					it->second.waiting_for_respose[status.Get_source()] = true;
 				else {
-					data.type=distributed_mutex::mpi_serial_t::type_t::RESPONSE;//TODO correct ts
+					data.type=distributed_mutex::mpi_serial_t::type_t::RESPONSE;
+					auto clock& = data.ts=it->second.clock;
+					clock.update();
+					data.ts=clock;
 					comm.Send(&data, sizeof(data), MPI_BYTE, status.Get_source(), tag);
 				}
 			}
