@@ -30,11 +30,13 @@ int application_thread(int& argc, char**& argv) {
 		monitor.add(mutex);
 		std::cout<<"Registered"<<std::endl;
 		sleep(1+comm.Get_rank());
-		mutex.lock();
+				
+		{//CRITICAL SECTION
+			std::lock_guard<distributed_monitor::distributed_mutex> guard(mutex);
+			std::cout<<comm.Get_rank()<<"In critical section"<<std::endl;
+			sleep(5);	
+		}
 		
-		std::cout<<comm.Get_rank()<<"In critical section"<<std::endl;
-		sleep(10);
-		mutex.unlock();
 		std::cout<<comm.Get_rank()<<"NOT In critical section"<<std::endl;
 	}
 	while(true);

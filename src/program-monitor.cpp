@@ -9,7 +9,7 @@ void program_monitor::receive_msg() {
 	MPI::Status status;
 	comm.Recv(&data, sizeof(data), MPI_BYTE, MPI_ANY_SOURCE, tag, status);
 	
-	l_mutex.lock();
+	std::lock_guard<std::mutex> guard(l_mutex);
 	
 	auto it = d_mutexes.find(data.resource_id);
 	switch(data.type) {
@@ -36,26 +36,20 @@ void program_monitor::receive_msg() {
 				notify(it->second);
 			}
 	}
-
-	l_mutex.unlock();
 }
 
 void program_monitor::add(distributed_mutex& mutex) {
-	l_mutex.lock();
+	std::lock_guard<std::mutex> guard(l_mutex);
 	
 	d_mutexes.emplace(mutex.resource_id, mutex);
 	mutex.p_monitor=this;
 	mutex.waiting_for_respose.resize(comm.Get_size());
-	
-	l_mutex.unlock();
 }
 
 void program_monitor::remove(const distributed_mutex& mutex) {
-	l_mutex.lock();
+	std::lock_guard<std::mutex> guard(l_mutex);
 	
 	d_mutexes.erase(mutex.resource_id);
-	
-	l_mutex.unlock();
 }
 
 void program_monitor::notify(distributed_mutex& mutex) {
