@@ -32,4 +32,13 @@ void distributed_mutex::on_notify() {
 	//TODO
 }
 
+void distributed_mutex::lock() {
+	request();
+	while(!can_enter());
+}
+
+void distributed_mutex::unlock() {
+	response();
+}
+
 }

@@ -25,17 +25,15 @@ int application_thread(int& argc, char**& argv) {
 	
 	
 	if(comm.Get_rank()<2) {
-		distributed_monitor::distributed_mutex mutex(comm.Get_rank());
+		distributed_monitor::distributed_mutex mutex(comm.Get_rank());//TODO only moniotr can create mutex
 		monitor.add(mutex);
 		std::cout<<"Registered"<<std::endl;
 	
-		mutex.request();
-		std::cout<<"Request sent"<<std::endl;
-		while(!mutex.can_enter());
+		mutex.lock();
 		
 		std::cout<<"In critical section"<<std::endl;
 		
-		mutex.response();
+		mutex.unlock();
 	}
 	while(true);
 	return EXIT_SUCCESS;

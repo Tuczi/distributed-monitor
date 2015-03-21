@@ -3,6 +3,7 @@
 
 #include <cstdint>
 #include <vector>
+#include <condition_variable>
 #include <mpi.h>
 
 #include "logic-clock.hpp"
@@ -35,6 +36,7 @@ class distributed_mutex {
 		uint32_t response_counter=0;
 		std::vector<bool> waiting_for_respose;
 		int tag=-1;
+		std::condition_variable condition;
 		
 		template <typename t>
 		void send(const t& data, int to) {
@@ -52,14 +54,18 @@ class distributed_mutex {
 			for(int i=rank+1; i<size; i++)
 				send(data, i);
 		}
-	public:
-		distributed_mutex(uint32_t resource_id): resource_id(resource_id), waiting_for_respose(MPI::COMM_WORLD.Get_size()) { }
 		
 		void request();//TODO return wakup_variable
 		bool can_enter();
 		void response();
 		
 		void on_notify();
+		
+	public:
+		distributed_mutex(uint32_t resource_id): resource_id(resource_id), waiting_for_respose(MPI::COMM_WORLD.Get_size()) { }
+		
+		void lock();
+		void unlock();
 };
 
 }
