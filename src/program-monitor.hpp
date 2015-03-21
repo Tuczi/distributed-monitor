@@ -6,6 +6,7 @@
 #include <cstdint>
 #include <unordered_map>
 #include <iostream>
+#include <mpi.h>
 
 #include "distributed-mutex.hpp"
 
@@ -18,8 +19,10 @@ class program_monitor {
 		std::mutex m_mutex;
 		std::unordered_map<uint32_t, distributed_mutex&> mutexes;
 		
-		void recive_msg();
-		void notify(uint32_t resource_id);
+		void receive_msg();
+		inline void notify(distributed_mutex& mutex) {
+			mutex.on_notify();
+		}
 		
 	public:
 		program_monitor(int tag): tag(tag) { }
