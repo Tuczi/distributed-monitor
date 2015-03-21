@@ -1,21 +1,40 @@
 CXX=/usr/lib64/openmpi/bin/mpic++
 CXXFLAGS=-g -Wall -Wextra --std=c++11
+CXXFLAGS_SO= -fPIC
 LFLAGS=
 
 ODIR=obj
 SDIR=src
 
-_OBJS=main.o program-monitor.o distributed-mutex.o
+_OBJS=program-monitor.o distributed-mutex.o
 
 OBJS=$(patsubst %,$(ODIR)/%,$(_OBJS))
 
-main: $(OBJS)
-	$(CXX) $(LFLAGS) $^ -o $@
+
+LFLAGS_T= -Llib -ldist_monitor
+TSDIR=test
+
+_TOBJS=main.o
+
+TOBJS=$(patsubst %,$(ODIR)/%,$(_TOBJS))
+
+test_p: $(TOBJS)
+	$(CXX) $(LFLAGS_T) $^ -o $@
+
+lib/libdist_monitor.so: $(OBJS)
+	$(CXX) -shared $(LFLAGS) $^ -o $@
 
 $(OBJS): $(ODIR)/%.o: $(SDIR)/%.cpp
-	$(CXX) -c $(CXXFLAGS) $< -o $@
+	$(CXX) -c $(CXXFLAGS_SO) $(CXXFLAGS) $< -o $@
 	
-.PHONY: clean
+$(TOBJS): $(ODIR)/%.o: $(TSDIR)/%.cpp
+	$(CXX) -c $(CXXFLAGS) $< -o $@	
+
+.PHONY: clean lib
 
 clean:
 	rm -f $(ODIR)/*.o
+	rm -f lib/*.so
+
+lib: clean lib/libdist_monitor.so
+all: lib test_p

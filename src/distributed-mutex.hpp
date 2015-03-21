@@ -49,6 +49,7 @@ class distributed_mutex {
 		
 	public:
 		distributed_mutex(uint32_t resource_id): resource_id(resource_id) { }
+		~distributed_mutex();
 		
 		void lock();
 		void unlock();

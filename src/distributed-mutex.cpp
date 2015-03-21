@@ -1,8 +1,17 @@
 #include "distributed-mutex.hpp"
 
 namespace distributed_monitor {
+
+distributed_mutex::~distributed_mutex() {
+	/*const auto* tmp= p_monitor;
+	if(tmp) {
+		tmp->remove(*this);
+	}*/ //TODO
+}
 		
 void distributed_mutex::request() {
+	std::lock_guard<std::mutex> guard(p_monitor->l_mutex);
+	
 	waiting = true;
 	response_counter = 0;
 	clock.update();
@@ -15,8 +24,9 @@ bool distributed_mutex::can_enter() {
 }
 
 void distributed_mutex::response() {
-	const auto& comm = MPI::COMM_WORLD;
-	for(int i=0; i<comm.Get_size(); i++) {
+	std::lock_guard<std::mutex> guard(p_monitor->l_mutex);
+	
+	for(int i=0; i<p_monitor->comm.Get_size(); i++) {
 		if(waiting_for_respose[i]) {
 			waiting_for_respose[i] = false;
 			

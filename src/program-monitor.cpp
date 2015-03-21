@@ -17,7 +17,7 @@ void program_monitor::receive_msg() {
 			
 			if(it == d_mutexes.end()) {
 				data.type = distributed_mutex::mpi_serial_t::type_t::RESPONSE;
-				comm.Send(&data, sizeof(data), MPI_BYTE, status.Get_source(), tag);
+				send(data, status.Get_source());
 			} else {
 				if(it->second.waiting && it->second.request_ts < data.ts)
 					it->second.waiting_for_respose[status.Get_source()] = true;
@@ -25,7 +25,7 @@ void program_monitor::receive_msg() {
 					data.type=distributed_mutex::mpi_serial_t::type_t::RESPONSE;
 					it->second.clock.update();
 					data.ts=it->second.clock;
-					comm.Send(&data, sizeof(data), MPI_BYTE, status.Get_source(), tag);
+					send(data, status.Get_source());
 				}
 			}
 			break;
