@@ -10,9 +10,9 @@ namespace distributed_monitor {
  * 
  * implementation of scalar logical clock
  */
-class logic_clock {
+class logical_clock {
 	private:
-		/// Primitive representation of logic clock
+		/// Primitive representation of logical clock
 		uint32_t value=0;
 		
 	public:
@@ -20,11 +20,11 @@ class logic_clock {
 			value++;
 		}
 		
-		inline void update(const logic_clock& clock) {
+		inline void update(const logical_clock& clock) {
 			value=clock.value;
 		}
 		
-		inline bool operator < (const logic_clock& clock) {
+		inline bool operator < (const logical_clock& clock) {
 			return value < clock.value;
 		}
 };

@@ -3,6 +3,6 @@
 
 #include "process_monitor.hpp"
 #include "distributed_mutex.hpp"
-#include "logic_clock.hpp"
+#include "logical_clock.hpp"
 
 #endif

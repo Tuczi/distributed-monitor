@@ -7,7 +7,7 @@
 #include <mpi.h>
 
 #include "process_monitor.hpp"
-#include "logic_clock.hpp"
+#include "logical_clock.hpp"
 
 namespace distributed_monitor {
 class process_monitor;//forward declaration
@@ -31,11 +31,11 @@ class distributed_mutex {
 		type_t type;
 		uint32_t resource_id;
 		/// Timestamp
-		logic_clock ts;
+		logical_clock ts;
 		
 		/// Constructor only for receiving messages
 		mpi_serial_t() { }
-		mpi_serial_t(type_t type, uint32_t resource_id, logic_clock ts): type(type), resource_id(resource_id), ts(ts) { }
+		mpi_serial_t(type_t type, uint32_t resource_id, logical_clock ts): type(type), resource_id(resource_id), ts(ts) { }
 	};
 	
 	private:
@@ -47,9 +47,9 @@ class distributed_mutex {
 		/// condition variable to wake up thread
 		std::condition_variable l_condition;
 		
-		logic_clock clock;
+		logical_clock clock;
 		/// timestamp of last request (send)
-		logic_clock request_ts;
+		logical_clock request_ts;
 		/// True if process want to enter
 		bool waiting=false;
 		uint32_t response_counter=0;
