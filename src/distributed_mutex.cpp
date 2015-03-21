@@ -20,7 +20,7 @@ void distributed_mutex::request() {
 }
 
 bool distributed_mutex::can_enter() {
-	return waiting && p_monitor->comm.Get_size()-1 == response_counter;
+	return waiting && (uint32_t) p_monitor->comm.Get_size()-1 == response_counter;
 }
 
 void distributed_mutex::response() {

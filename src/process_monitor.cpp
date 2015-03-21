@@ -14,7 +14,6 @@ void process_monitor::receive_msg() {
 	auto it = d_mutexes.find(data.resource_id);
 	switch(data.type) {
 		case distributed_mutex::mpi_serial_t::type_t::REQUEST:
-			
 			if(it == d_mutexes.end()) {
 				data.type = distributed_mutex::mpi_serial_t::type_t::RESPONSE;
 				send(data, status.Get_source());
@@ -32,7 +31,7 @@ void process_monitor::receive_msg() {
 			
 		case distributed_mutex::mpi_serial_t::type_t::RESPONSE:
 			it->second.response_counter++;
-			if(it->second.response_counter == comm.Get_size()-1) {
+			if(it->second.response_counter == (uint32_t)comm.Get_size()-1) {
 				notify(it->second);
 			}
 	}

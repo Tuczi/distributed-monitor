@@ -16,8 +16,8 @@ class distributed_mutex;
 class process_monitor {
 	friend distributed_mutex;
 	private:
-		const MPI::Intracomm& comm;
 		const int tag;
+		const MPI::Intracomm& comm;
 		
 		std::thread l_thread;
 		std::mutex l_mutex;
