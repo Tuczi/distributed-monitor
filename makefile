@@ -1,5 +1,5 @@
 CXX=/usr/lib64/openmpi/bin/mpic++
-CXXFLAGS=-g -Wall -Wextra --std=c++11
+CXXFLAGS=-g -Wall -Wextra --std=c++11 -O2
 CXXFLAGS_SO= -fPIC
 LFLAGS=
 
