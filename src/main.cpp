@@ -11,10 +11,12 @@ int application_thread(int& argc, char**& argv) {
 
 int main(int argc, char** argv) {
 	
-	MPI_Init(&argc,&argv);
+	MPI::Init(argc, argv);
 	
 	distributed_monitor::program_monitor monitor(100);
 	monitor.run();
 	
-	return application_thread(argc, argv);
+	int result = application_thread(argc, argv);
+	//MPI::Finalize();
+	return result;
 }

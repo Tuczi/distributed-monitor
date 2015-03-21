@@ -3,6 +3,9 @@
 namespace distributed_monitor {
 		
 void distributed_mutex::request() {
+	clock.update();
+	request_ts = clock;
+	broadcast(request_t(resource_id, request_ts));
 }
 
 bool distributed_mutex::can_enter() {
