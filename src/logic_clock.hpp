@@ -5,11 +5,14 @@
 
 namespace distributed_monitor {
 
+/**
+ * Logical clock
+ * 
+ * implementation of scalar logical clock
+ */
 class logic_clock {
 	private:
-		/**
-		 * Primitive representation of logic clock
-		 */
+		/// Primitive representation of logic clock
 		uint32_t value=0;
 		
 	public:

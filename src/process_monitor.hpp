@@ -13,14 +13,23 @@
 namespace distributed_monitor {
 class distributed_mutex;
 
+/**
+ * Process monitor
+ * 
+ * runs in single std::thread
+ * it provides communication via Open MPI and notify distributed_mutexes
+ */
 class process_monitor {
 	friend distributed_mutex;
 	private:
 		const int tag;
 		const MPI::Intracomm& comm;
 		
+		/// thread of this monitor
 		std::thread l_thread;
+		/// mutex to block data structures
 		std::mutex l_mutex;
+		/// map <resource_id, distributed_mutex>
 		std::unordered_map<uint32_t, distributed_mutex&> d_mutexes;
 		
 		void receive_msg();
@@ -50,6 +59,7 @@ class process_monitor {
 		void add(distributed_mutex&);
 		void remove(const distributed_mutex&);
 		
+		/// run process monitor thread
 		void run();
 };
 
