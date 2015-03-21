@@ -5,5 +5,4 @@
 #include "distributed-mutex.hpp"
 #include "logic-clock.hpp"
 
-
 #endif

@@ -1,8 +1,9 @@
 #include "distributed-mutex.hpp"
-#include <unistd.h>
+
 namespace distributed_monitor {
 		
 void distributed_mutex::request() {
+	response_counter = 0;
 	clock.update();
 	request_ts = clock;
 	p_monitor->broadcast(mpi_serial_t(mpi_serial_t::type_t::REQUEST, resource_id, request_ts));
@@ -36,7 +37,7 @@ void distributed_mutex::lock() {
 	request();
 	std::unique_lock<std::mutex> lk(l_mutex);
 	l_condition.wait(lk, [this]()-> bool {
-		this->can_enter();
+		return this->can_enter();
 	});
 }
 

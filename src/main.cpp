@@ -1,6 +1,7 @@
 #include <cstdlib>
 #include <mpi.h>
 #include <iostream>
+#include <unistd.h>
 
 #include "distributed-monitor.hpp"
 
@@ -25,15 +26,16 @@ int application_thread(int& argc, char**& argv) {
 	
 	
 	if(comm.Get_rank()<2) {
-		distributed_monitor::distributed_mutex mutex(comm.Get_rank());//TODO only moniotr can create mutex
+		distributed_monitor::distributed_mutex mutex(11);//TODO only moniotr can create mutex
 		monitor.add(mutex);
 		std::cout<<"Registered"<<std::endl;
-	
+		sleep(1+comm.Get_rank());
 		mutex.lock();
 		
-		std::cout<<"In critical section"<<std::endl;
-		
+		std::cout<<comm.Get_rank()<<"In critical section"<<std::endl;
+		sleep(10);
 		mutex.unlock();
+		std::cout<<comm.Get_rank()<<"NOT In critical section"<<std::endl;
 	}
 	while(true);
 	return EXIT_SUCCESS;

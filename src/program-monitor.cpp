@@ -32,7 +32,6 @@ void program_monitor::receive_msg() {
 			
 		case distributed_mutex::mpi_serial_t::type_t::RESPONSE:
 			it->second.response_counter++;
-			std::cout<<it->second.response_counter<<std::endl;
 			if(it->second.response_counter == comm.Get_size()-1) {
 				notify(it->second);
 			}
