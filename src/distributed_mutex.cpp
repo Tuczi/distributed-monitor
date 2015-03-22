@@ -18,7 +18,7 @@ void distributed_mutex::request() {
 	p_monitor->broadcast(mpi_serial_t(mpi_serial_t::type_t::REQUEST, resource_id, request_ts));
 }
 
-bool distributed_mutex::can_enter() {
+bool distributed_mutex::can_enter() const {
 	return (uint32_t) p_monitor->comm.Get_size() == response_counter;
 }
 
@@ -38,7 +38,7 @@ void distributed_mutex::response() {
 	response_counter=0;
 }
 
-bool distributed_mutex::has_priority(const logical_clock_uint& data_ts, const int source) {
+bool distributed_mutex::has_priority(const logical_clock_uint& data_ts, const int source) const {
 	return response_counter && 
 		( (request_ts < data_ts) || (request_ts == data_ts && p_monitor->comm.Get_rank() < source) );
 }

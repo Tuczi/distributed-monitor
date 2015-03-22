@@ -60,10 +60,10 @@ class distributed_mutex {
 		std::vector<bool> waiting_for_respose;
 		
 		/// true if local_process has priority over source process in mutual exclusion
-		bool has_priority(const logical_clock_uint& data_ts, const int source);
+		bool has_priority(const logical_clock_uint& data_ts, const int source) const;
 		
 		void request();
-		bool can_enter();
+		bool can_enter() const;
 		void response();
 		
 		void on_notify();

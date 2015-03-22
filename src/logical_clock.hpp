@@ -28,15 +28,15 @@ class logical_clock {
 				value=clock.value;
 		}
 		
-		inline bool operator < (const logical_clock& clock) {
+		inline bool operator < (const logical_clock& clock) const {
 			return value < clock.value;
 		}
 		
-		inline bool operator == (const logical_clock& clock) {
+		inline bool operator == (const logical_clock& clock) const {
 			return value == clock.value;
 		}
 		
-		inline bool operator > (const logical_clock& clock) {
+		inline bool operator > (const logical_clock& clock) const {
 			return value > clock.value;
 		}
 		
