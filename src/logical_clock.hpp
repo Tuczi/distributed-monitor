@@ -10,24 +10,44 @@ namespace distributed_monitor {
  * 
  * implementation of scalar logical clock
  */
+template <typename t>
 class logical_clock {
 	private:
 		/// Primitive representation of logical clock
-		uint32_t value=0;
+		t value=0;
 		
 	public:
+		typedef t primitve_type;
+		
 		inline void update() {
 			value++;
 		}
 		
 		inline void update(const logical_clock& clock) {
-			value=clock.value;
+			if(*this<clock)
+				value=clock.value;
 		}
 		
 		inline bool operator < (const logical_clock& clock) {
 			return value < clock.value;
 		}
+		
+		inline bool operator == (const logical_clock& clock) {
+			return value == clock.value;
+		}
+		
+		inline bool operator > (const logical_clock& clock) {
+			return value > clock.value;
+		}
+		
+		#ifdef DEBUG
+		inline t get_value() {
+			return value;
+		}
+		#endif
 };
+
+typedef logical_clock<uint32_t> logical_clock_uint;
 
 }
 #endif

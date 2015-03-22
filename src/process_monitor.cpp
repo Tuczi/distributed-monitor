@@ -12,13 +12,21 @@ void process_monitor::receive_msg() {
 	std::lock_guard<std::mutex> guard(l_mutex);
 	
 	auto it = d_mutexes.find(data.resource_id);
+	#ifdef DEBUG
+	std::cout<<"RCV(T:"<<comm.Get_rank()<<", F:"<<status.Get_source()
+		<<") TYPE: "<<data.type<<",TS: "<<data.ts.get_value()
+		<<",CLK: "<<(it == d_mutexes.end() ? 0 : it->second.clock.get_value())
+		<<",RQ_TS: "<<(it == d_mutexes.end() ? 0 : it->second.request_ts.get_value())
+		<<std::endl;
+	#endif
 	switch(data.type) {
 		case distributed_mutex::mpi_serial_t::type_t::REQUEST:
 			if(it == d_mutexes.end()) {
 				data.type = distributed_mutex::mpi_serial_t::type_t::RESPONSE;
 				send(data, status.Get_source());
 			} else {
-				if(it->second.waiting && it->second.request_ts < data.ts)
+				it->second.clock.update(data.ts);
+				if( it->second.has_priority(data.ts, status.Get_source()) )
 					it->second.waiting_for_respose[status.Get_source()] = true;
 				else {
 					data.type=distributed_mutex::mpi_serial_t::type_t::RESPONSE;
@@ -31,7 +39,7 @@ void process_monitor::receive_msg() {
 			
 		case distributed_mutex::mpi_serial_t::type_t::RESPONSE:
 			it->second.response_counter++;
-			if(it->second.response_counter == (uint32_t)comm.Get_size()-1) {
+			if(it->second.can_enter()) {
 				notify(it->second);
 			}
 	}

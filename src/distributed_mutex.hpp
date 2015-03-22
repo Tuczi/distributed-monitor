@@ -31,11 +31,11 @@ class distributed_mutex {
 		type_t type;
 		uint32_t resource_id;
 		/// Timestamp
-		logical_clock ts;
+		logical_clock_uint ts;
 		
 		/// Constructor only for receiving messages
 		mpi_serial_t() { }
-		mpi_serial_t(type_t type, uint32_t resource_id, logical_clock ts): type(type), resource_id(resource_id), ts(ts) { }
+		mpi_serial_t(type_t type, uint32_t resource_id, logical_clock_uint ts): type(type), resource_id(resource_id), ts(ts) { }
 	};
 	
 	private:
@@ -47,17 +47,20 @@ class distributed_mutex {
 		/// condition variable to wake up thread
 		std::condition_variable l_condition;
 		
-		logical_clock clock;
+		logical_clock_uint clock;
 		/// timestamp of last request (send)
-		logical_clock request_ts;
-		/// True if process want to enter
-		bool waiting=false;
+		logical_clock_uint request_ts;
+		
+		/// >0 if process want to enter.
 		uint32_t response_counter=0;
 		/**
 		 * If value of i-th element is true then
 		 * on unlock there is necessary to send response to i-th process
 		 */
 		std::vector<bool> waiting_for_respose;
+		
+		/// true if local_process has priority over source process in mutual exclusion
+		bool has_priority(const logical_clock_uint& data_ts, const int source);
 		
 		void request();
 		bool can_enter();

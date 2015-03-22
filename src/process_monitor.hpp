@@ -51,7 +51,7 @@ class process_monitor {
 		}
 		
 	public:
-		process_monitor(int tag, const MPI::Intracomm& comm=MPI::COMM_WORLD): tag(tag), comm(comm) { }
+		process_monitor(int tag, const MPI::Intracomm& comm=MPI::COMM_WORLD): tag(tag), comm(comm) { std::cout<<"A"<<std::endl; }
 		~process_monitor() { 
 			l_thread.join();
 		}
