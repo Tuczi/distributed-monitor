@@ -35,20 +35,32 @@ class process_monitor {
 		void receive_msg();
 		void notify(distributed_mutex&);
 		
-		template <typename t>
-		void send(const t& data, int to) {
+  public:
+    template <typename t>
+		void send(const t& data, const int to, const int tag) {
 			comm.Send(&data, sizeof(t), MPI_BYTE, to, tag);
 		}
-		
+    
 		template <typename t> 
-		void broadcast(const t& data) {
+		void broadcast(const t& data, const int tag) {
 			const int size = comm.Get_size(), rank = comm.Get_rank();
 			
 			for(int i=0; i<rank; i++)
-				send(data, i);
+				send(data, i, tag);
 			for(int i=rank+1; i<size; i++)
-				send(data, i);
+				send(data, i, tag);
 		}
+  
+  private:
+    template <typename t>
+		void send(const t& data, const int to) {
+			send(data, to, tag);
+		}
+    
+    template <typename t> 
+		void broadcast(const t& data) {
+      broadcast(data, tag);
+    }
 		
 	public:
 		process_monitor(int tag, const MPI::Intracomm& comm=MPI::COMM_WORLD): tag(tag), comm(comm) { std::cout<<"A"<<std::endl; }
