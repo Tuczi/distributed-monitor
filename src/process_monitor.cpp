@@ -7,7 +7,11 @@ void process_monitor::receive_msg() {
 	
 	distributed_mutex::mpi_serial_t data;
 	MPI::Status status;
-	comm.Recv(&data, sizeof(data), MPI_BYTE, MPI_ANY_SOURCE, tag, status);
+	auto mpi_req = comm.Irecv(&data, sizeof(data), MPI_BYTE, MPI_ANY_SOURCE, tag);
+	if(!mpi_req.Test(status)) {
+		std::this_thread::sleep_for(std::chrono::seconds(1));
+		return;
+	}
 	
 	std::lock_guard<std::mutex> guard(l_mutex);
 	

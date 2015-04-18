@@ -113,7 +113,14 @@ int application_thread(int&, char**&);
 
 int main(int argc, char** argv) {
 	
-	MPI::Init(argc, argv);
+	const auto mpi_expected_level = MPI_THREAD_FUNNELED; //MPI_THREAD_MULTIPLE;
+	const auto mpi_provided_level = MPI::Init_thread(argc, argv, mpi_expected_level);
+	if(mpi_provided_level < mpi_expected_level) {
+		std::cout<<"expected thread level: "<<mpi_expected_level<<", provided: "<<mpi_provided_level<<std::endl;
+		
+		MPI::Finalize();
+		return EXIT_FAILURE;
+	}
 	
 	monitor.run();
 	int result = application_thread(argc, argv);
@@ -126,15 +133,17 @@ int application_thread(int& argc, char**& argv) {
 	const auto& comm = MPI::COMM_WORLD;
 	std::cout<<"Hello"<<std::endl;
 	
-	/*if(comm.Get_rank()<2)*/ {
-		simple_buffer_t<int> buffer(11);
-		std::this_thread::sleep_for(std::chrono::seconds(1));
+	
+	simple_buffer_t<int> buffer(11);
+	comm.Barrier();
+	std::cout<<"Hello2"<<std::endl;
+	
+	//std::this_thread::sleep_for(std::chrono::seconds(1));
 		
-		buffer.push(comm.Get_rank());
-    std::cout<<comm.Get_rank()<<" get "<<buffer.get()<<std::endl;;
-	}
+	buffer.push(comm.Get_rank());
+    std::cout<<comm.Get_rank()<<" get "<<buffer.get()<<std::endl;
   
-  std::cout<<"Bye"<<std::endl;
+	std::cout<<"Bye"<<std::endl;
 
 	while(true);
 	return EXIT_SUCCESS;
