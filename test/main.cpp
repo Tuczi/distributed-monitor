@@ -81,9 +81,7 @@ class simple_buffer_t {
      */
     void run_update_thread() {
       mpi_data_t mpi_data;
-      MPI::Status status;
-      
-      monitor.proxy.recv(&mpi_data, sizeof(mpi_data), MPI_BYTE, MPI_ANY_SOURCE, internal_mpi_tag, status, comm);
+      MPI::Status status = monitor.proxy.recv(&mpi_data, sizeof(mpi_data), internal_mpi_tag, comm);
       
       ///update data
       if(mpi_data.is_push)
@@ -92,20 +90,20 @@ class simple_buffer_t {
         data.pop();
         
       uint8_t ack_data;
-      monitor.proxy.send(ack_data, status.Get_source(), internal_mpi_tag);
+      monitor.proxy.send(ack_data, status.Get_source(), internal_mpi_tag, comm);
     }
     
     void send_update(const bool isPush, const value_t& v) {
       mpi_data_t mpi_data(isPush, v);
       MPI::Status status;
       
-      monitor.broadcast(mpi_data, internal_mpi_tag);
+      monitor.proxy.broadcast(mpi_data, internal_mpi_tag, comm);
       
       const int size = comm.Get_size();
       uint8_t ack_data;
       ///ack counter
       for(int i=1; i<comm.Get_size(); i++)
-        monitor.proxy.recv(&ack_data, sizeof(ack_data), MPI_BYTE, MPI_ANY_SOURCE, internal_mpi_tag, status, comm);
+        status = monitor.proxy.recv(&ack_data, sizeof(ack_data), internal_mpi_tag, comm);
     }
 };
 

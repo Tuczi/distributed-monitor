@@ -61,6 +61,7 @@ void process_monitor::notify(distributed_mutex& mutex) {
 }
 
 void process_monitor::run() {
+  proxy.run();
 	l_thread = std::thread([&]()->void {
 		while(true) {
 			this->receive_msg();

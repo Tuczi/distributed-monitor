@@ -3,12 +3,14 @@
 namespace distributed_monitor {
   void mpi_proxy::receive_msg() {
     std::this_thread::yield();
-    std::lock_guard(data_map_mutex) lk;
+    std::lock_guard<std::mutex> lk(data_map_mutex);
     for(auto& it: data_map) {
-      auto request = it.check_tag(tag);
-      if(request.Test(it.status)) {
-        it.rady = true;
-        it.notify();
+      auto& data = it.second;
+      auto request = data.check_tag(it.first);
+      if(request.Test(data.status)) {
+        data.ready = true;
+        data.cv.notify_one();
       }
     }
+  }
 }

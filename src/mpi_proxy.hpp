@@ -40,7 +40,7 @@ class mpi_proxy {
         cv.wait(lk, [this]()->bool{return ready;});
       }
       
-      inline MPI::Request check_tag(int tag){
+      inline MPI::Request check_tag(int tag) {
         return comm.Irecv(data, count, MPI_BYTE, MPI_ANY_SOURCE, tag);
       }
       
@@ -53,10 +53,6 @@ class mpi_proxy {
 		
 		/// map <tag, rcv_data>
 		std::unordered_map<int, rcv_data> data_map;
-		
-		inline void notify(const int tag) {
-      data_map[tag].cv.notify_one();
-    }
     
     void receive_msg();
 		
@@ -74,9 +70,9 @@ class mpi_proxy {
 			const int size = comm.Get_size(), rank = comm.Get_rank();
 			
 			for(int i=0; i<rank; i++)
-				send(data, i, tag);
+				send(data, i, tag, comm);
 			for(int i=rank+1; i<size; i++)
-				send(data, i, tag);
+				send(data, i, tag, comm);
 		}
     
     MPI::Status recv(void* data, const int count, const int tag, const MPI::Intracomm& comm) {
