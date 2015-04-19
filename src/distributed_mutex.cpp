@@ -15,7 +15,7 @@ void distributed_mutex::request() {
 	response_counter=1;
 	clock.update();
 	request_ts = clock;
-	p_monitor->broadcast(mpi_serial_t(mpi_serial_t::type_t::REQUEST, resource_id, request_ts));
+	p_monitor->proxy.broadcast(mpi_serial_t(mpi_serial_t::type_t::REQUEST, resource_id, request_ts));
 }
 
 bool distributed_mutex::can_enter() const {
@@ -31,7 +31,7 @@ void distributed_mutex::response() {
 		if(waiting_for_respose[i]) {
 			waiting_for_respose[i] = false;
 			
-			p_monitor->send(mpi_serial_t(mpi_serial_t::type_t::RESPONSE, resource_id, request_ts), i);
+			p_monitor->proxy.send(mpi_serial_t(mpi_serial_t::type_t::RESPONSE, resource_id, request_ts), i);
 		}
 	}
 	

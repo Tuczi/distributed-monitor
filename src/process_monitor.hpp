@@ -8,6 +8,7 @@
 #include <iostream>
 #include <mpi.h>
 
+#include "mpi_proxy.hpp"
 #include "distributed_mutex.hpp"
 
 namespace distributed_monitor {
@@ -17,7 +18,7 @@ class distributed_mutex;
  * Process monitor
  * 
  * runs in single std::thread
- * it provides communication via Open MPI and notify distributed_mutexes
+ * it provides communication via Open MPI (mpi_proxy class) and notify distributed_mutexes
  */
 class process_monitor {
 	friend distributed_mutex;
@@ -35,34 +36,10 @@ class process_monitor {
 		void receive_msg();
 		void notify(distributed_mutex&);
 		
-  public:
-    template <typename t>
-		void send(const t& data, const int to, const int tag) {
-			comm.Send(&data, sizeof(t), MPI_BYTE, to, tag);
-		}
-    
-		template <typename t> 
-		void broadcast(const t& data, const int tag) {
-			const int size = comm.Get_size(), rank = comm.Get_rank();
-			
-			for(int i=0; i<rank; i++)
-				send(data, i, tag);
-			for(int i=rank+1; i<size; i++)
-				send(data, i, tag);
-		}
-  
-  private:
-    template <typename t>
-		void send(const t& data, const int to) {
-			send(data, to, tag);
-		}
-    
-    template <typename t> 
-		void broadcast(const t& data) {
-      broadcast(data, tag);
-    }
-		
 	public:
+    /// communication proxy
+    mpi_proxy proxy;
+    
 		process_monitor(int tag, const MPI::Intracomm& comm=MPI::COMM_WORLD): tag(tag), comm(comm) { std::cout<<"A"<<std::endl; }
 		~process_monitor() { 
 			l_thread.join();

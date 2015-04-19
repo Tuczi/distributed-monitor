@@ -3,17 +3,10 @@
 namespace distributed_monitor {
 
 void process_monitor::receive_msg() {
-	const auto& comm = MPI::COMM_WORLD;
-	
 	distributed_mutex::mpi_serial_t data;
-	MPI::Status status;
-	auto mpi_req = comm.Irecv(&data, sizeof(data), MPI_BYTE, MPI_ANY_SOURCE, tag);
-	if(!mpi_req.Test(status)) {
-		std::this_thread::sleep_for(std::chrono::seconds(1));
-		return;
-	}
-	
-	std::lock_guard<std::mutex> guard(l_mutex);
+	MPI::Status status = proxy.recv(&data, sizeof(data), tag, comm);
+
+	std::lock_guard<std::mutex> lk(l_mutex);
 	
 	auto it = d_mutexes.find(data.resource_id);
 	#ifdef DEBUG
@@ -27,7 +20,7 @@ void process_monitor::receive_msg() {
 		case distributed_mutex::mpi_serial_t::type_t::REQUEST:
 			if(it == d_mutexes.end()) {
 				data.type = distributed_mutex::mpi_serial_t::type_t::RESPONSE;
-				send(data, status.Get_source());
+				proxy.send(data, status.Get_source(), tag, comm);
 			} else {
 				it->second.clock.update(data.ts);
 				if( it->second.has_priority(data.ts, status.Get_source()) )
@@ -36,7 +29,7 @@ void process_monitor::receive_msg() {
 					data.type=distributed_mutex::mpi_serial_t::type_t::RESPONSE;
 					it->second.clock.update();
 					data.ts=it->second.clock;
-					send(data, status.Get_source());
+					proxy.send(data, status.Get_source(), tag, comm);
 				}
 			}
 			break;

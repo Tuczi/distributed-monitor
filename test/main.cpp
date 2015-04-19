@@ -83,7 +83,7 @@ class simple_buffer_t {
       mpi_data_t mpi_data;
       MPI::Status status;
       
-      comm.Recv(&mpi_data, sizeof(mpi_data), MPI_BYTE, MPI_ANY_SOURCE, internal_mpi_tag, status);
+      monitor.proxy.recv(&mpi_data, sizeof(mpi_data), MPI_BYTE, MPI_ANY_SOURCE, internal_mpi_tag, status, comm);
       
       ///update data
       if(mpi_data.is_push)
@@ -92,7 +92,7 @@ class simple_buffer_t {
         data.pop();
         
       uint8_t ack_data;
-      monitor.send(ack_data, status.Get_source(), internal_mpi_tag);
+      monitor.proxy.send(ack_data, status.Get_source(), internal_mpi_tag);
     }
     
     void send_update(const bool isPush, const value_t& v) {
@@ -105,7 +105,7 @@ class simple_buffer_t {
       uint8_t ack_data;
       ///ack counter
       for(int i=1; i<comm.Get_size(); i++)
-        comm.Recv(&ack_data, sizeof(ack_data), MPI_BYTE, MPI_ANY_SOURCE, internal_mpi_tag, status);
+        monitor.proxy.recv(&ack_data, sizeof(ack_data), MPI_BYTE, MPI_ANY_SOURCE, internal_mpi_tag, status, comm);
     }
 };
 

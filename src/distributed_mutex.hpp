@@ -6,6 +6,7 @@
 #include <condition_variable>
 #include <mpi.h>
 
+#include "mpi_proxy.hpp"
 #include "process_monitor.hpp"
 #include "logical_clock.hpp"
 
