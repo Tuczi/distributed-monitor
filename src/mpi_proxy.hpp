@@ -9,6 +9,8 @@
 #include <iostream>
 #include <mpi.h>
 
+#define DEBUG
+
 namespace distributed_monitor {
 
 /**
@@ -28,20 +30,26 @@ class mpi_proxy {
       void* data;
       int count;
       MPI::Status status;
+      MPI::Request request;
       
+      bool inited;
       bool ready;
       MPI::Intracomm& comm;
       
       rcv_data(): comm(MPI::COMM_WORLD) {}
-      rcv_data(void* data, int count, MPI::Intracomm& comm): data(data), count(count), ready(false), comm(comm) { }
+      rcv_data(void* data, int count, MPI::Intracomm& comm): data(data), count(count), inited(false), ready(false), comm(comm) { }
       //rcv_data(rcv_data&& o): cv(o.cv), data(std::move(o.data)), count(o.count), status(std::move(o.status)), ready(o.ready), comm(std::move(o.comm)) { }
       
       inline void wait(std::unique_lock<std::mutex>& lk) {
         cv.wait(lk, [this]()->bool{return ready;});
       }
       
-      inline MPI::Request check_tag(int tag) {
-        return comm.Irecv(data, count, MPI_BYTE, MPI_ANY_SOURCE, tag);
+      inline bool try_rcv(int tag) {
+				if(!inited) {
+					request = comm.Irecv(data, count, MPI_BYTE, MPI_ANY_SOURCE, tag);
+					inited = true;
+				}
+				return request.Test(status);
       }
       
     };

@@ -141,11 +141,13 @@ int application_thread(int& argc, char**& argv) {
 		buffer.push(comm.Get_rank());
 		
 	//std::this_thread::sleep_for(std::chrono::seconds(1));
-   
-  buffer.get();
+  if(comm.Get_rank()==2) 
+		buffer.get();
   
 	std::cout<<"Bye"<<std::endl;
 
-	while(true);
+	while(true)
+		std::this_thread::sleep_for(std::chrono::seconds(10));
+	
 	return EXIT_SUCCESS;
 }

@@ -6,8 +6,7 @@ namespace distributed_monitor {
     std::lock_guard<std::mutex> lk(data_map_mutex);
     for(auto& it: data_map) {
       auto& data = it.second;
-      auto request = data.check_tag(it.first);
-      if(request.Test(data.status)) {
+      if(data.try_rcv(it.first)) {
 				#ifdef DEBUG
 				std::cout<<"mpi_proxy rcv success. tag: "<<it.first<<std::endl;
 				#endif
