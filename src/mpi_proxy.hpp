@@ -45,11 +45,14 @@ class mpi_proxy {
       }
       
       inline bool try_rcv(int tag) {
+				if(ready)
+					return false;
+				
 				if(!inited) {
-					request = comm.Irecv(data, count, MPI_BYTE, MPI_ANY_SOURCE, tag);
-					inited = true;
-				}
-				return request.Test(status);
+						request = comm.Irecv(data, count, MPI_BYTE, MPI_ANY_SOURCE, tag);
+						inited = true;
+					}
+					return request.Test(status);		
       }
       
     };
