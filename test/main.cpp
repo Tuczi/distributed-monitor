@@ -24,7 +24,8 @@ class simple_buffer_t {
     mpi_data_t() { }
   };
 	public:
-    int internal_mpi_tag;
+    int internal_mpi_update_tag;
+		int internal_mpi_ack_tag;
     const MPI::Intracomm& comm = MPI::COMM_WORLD;
 		distributed_monitor::distributed_mutex d_mutex;
     
@@ -32,7 +33,7 @@ class simple_buffer_t {
     
     std::queue<value_t> data;
 	
-		simple_buffer_t(int tag): internal_mpi_tag(tag), d_mutex(tag) {
+		simple_buffer_t(int tag, int tag2): internal_mpi_update_tag(tag), internal_mpi_ack_tag(tag2), d_mutex(tag) {
 			monitor.add(d_mutex);
       
       update_thread = std::thread([this]()->void{
@@ -66,7 +67,7 @@ class simple_buffer_t {
 			
       send_update(false, result);
       
-      std::cout<<comm.Get_rank()<<" get - exiting critical section"<<std::endl;
+      std::cout<<comm.Get_rank()<<" get - exiting critical section with value "<<result<<std::endl;
       
       return result;
 		}
@@ -81,8 +82,9 @@ class simple_buffer_t {
      */
     void run_update_thread() {
       mpi_data_t mpi_data;
-      MPI::Status status = monitor.proxy.recv(&mpi_data, sizeof(mpi_data), internal_mpi_tag, comm);
+      MPI::Status status = monitor.proxy.recv(&mpi_data, sizeof(mpi_data), internal_mpi_update_tag, comm);
       
+      std::cout<<comm.Get_rank()<<" run_update_thread rcv from"<< status.Get_source() <<std::endl;
       ///update data
       if(mpi_data.is_push)
         data.push(mpi_data.value);
@@ -90,20 +92,20 @@ class simple_buffer_t {
         data.pop();
         
       uint8_t ack_data;
-      monitor.proxy.send(ack_data, status.Get_source(), internal_mpi_tag, comm);
+      monitor.proxy.send(ack_data, status.Get_source(), internal_mpi_ack_tag, comm);
     }
     
     void send_update(const bool isPush, const value_t& v) {
       mpi_data_t mpi_data(isPush, v);
       MPI::Status status;
       
-      monitor.proxy.broadcast(mpi_data, internal_mpi_tag, comm);
+      monitor.proxy.broadcast(mpi_data, internal_mpi_update_tag, comm);
       
       const int size = comm.Get_size();
       uint8_t ack_data;
       ///ack counter
       for(int i=1; i<comm.Get_size(); i++)
-        status = monitor.proxy.recv(&ack_data, sizeof(ack_data), internal_mpi_tag, comm);
+        status = monitor.proxy.recv(&ack_data, sizeof(ack_data), internal_mpi_ack_tag, comm);
     }
 };
 
@@ -131,15 +133,16 @@ int application_thread(int& argc, char**& argv) {
 	const auto& comm = MPI::COMM_WORLD;
 	std::cout<<"Hello"<<std::endl;
 	
-	
-	simple_buffer_t<int> buffer(11);
+	simple_buffer_t<int> buffer(11, 12);
 	comm.Barrier();
 	std::cout<<"Hello2"<<std::endl;
 	
-	//std::this_thread::sleep_for(std::chrono::seconds(1));
+	if(comm.Get_rank()==1)
+		buffer.push(comm.Get_rank());
 		
-	buffer.push(comm.Get_rank());
-    std::cout<<comm.Get_rank()<<" get "<<buffer.get()<<std::endl;
+	//std::this_thread::sleep_for(std::chrono::seconds(1));
+   
+  buffer.get();
   
 	std::cout<<"Bye"<<std::endl;
 

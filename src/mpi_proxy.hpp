@@ -63,6 +63,9 @@ class mpi_proxy {
     template <typename t>
 		void send(const t& data, const int to, const int tag, const MPI::Intracomm& comm) {
 			comm.Send(&data, sizeof(t), MPI_BYTE, to, tag);
+			#ifdef DEBUG
+			std::cout<<comm.Get_rank()<<" send to "<<to<<std::endl;
+			#endif
 		}
     
 		template <typename t> 
@@ -76,18 +79,28 @@ class mpi_proxy {
 		}
     
     MPI::Status recv(void* data, const int count, const int tag, const MPI::Intracomm& comm) {
-      std::unique_lock<std::mutex> global_lock(data_map_mutex);
+			#ifdef DEBUG
+			std::cout<<comm.Get_rank()<<" want to rcv "<<std::endl;
+			#endif
+      std::unique_lock<std::mutex> global_add_lock(data_map_mutex);
       data_map.emplace(std::piecewise_construct,
         std::forward_as_tuple(tag),
         std::forward_as_tuple(data, count, (MPI::Intracomm&)comm));
-      global_lock.unlock();
+      global_add_lock.unlock();
       
       std::mutex mutex;
       std::unique_lock<std::mutex> local_lock(mutex);
       
       data_map[tag].wait(local_lock);
+      #ifdef DEBUG
+      std::cout<<comm.Get_rank()<<" rcv continue "<<std::endl;
+      #endif
+      auto status = data_map[tag].status;
       
-      return data_map[tag].status;
+      std::unique_lock<std::mutex> global_rm_lock(data_map_mutex);
+			data_map.erase(tag);
+			
+      return status;
     }
     
     inline void run() {
