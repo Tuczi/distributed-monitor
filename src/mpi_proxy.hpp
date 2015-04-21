@@ -9,8 +9,6 @@
 #include <iostream>
 #include <mpi.h>
 
-#define DEBUG
-
 namespace distributed_monitor {
 
 /**
@@ -25,34 +23,40 @@ namespace distributed_monitor {
 class mpi_proxy {
   public:
     struct rcv_data {
+			enum rcv_status: uint_fast8_t {
+				/// order of this values is important!
+				ready = 0, initiated, not_initiated
+			};
+			
       std::condition_variable cv;
       
       void* data;
       int count;
       MPI::Status status;
       MPI::Request request;
-      
-      bool inited;
-      bool ready;
       MPI::Intracomm& comm;
       
+      rcv_status nonblocking_status;
+      
       rcv_data(): comm(MPI::COMM_WORLD) {}
-      rcv_data(void* data, int count, MPI::Intracomm& comm): data(data), count(count), inited(false), ready(false), comm(comm) { }
-      //rcv_data(rcv_data&& o): cv(o.cv), data(std::move(o.data)), count(o.count), status(std::move(o.status)), ready(o.ready), comm(std::move(o.comm)) { }
+      rcv_data(void* data, int count, MPI::Intracomm& comm): data(data), count(count), comm(comm), nonblocking_status(rcv_status::not_initiated) { }
       
       inline void wait(std::unique_lock<std::mutex>& lk) {
-        cv.wait(lk, [this]()->bool{return ready;});
+        cv.wait(lk, [this]()->bool{return nonblocking_status==rcv_status::ready;});
       }
       
       inline bool try_rcv(int tag) {
-				if(ready)
+				/// it was rcv previously
+				if(nonblocking_status == rcv_status::ready)
 					return false;
 				
-				if(!inited) {
-						request = comm.Irecv(data, count, MPI_BYTE, MPI_ANY_SOURCE, tag);
-						inited = true;
-					}
-					return request.Test(status);		
+				///Call MPI Irecv once
+				if(nonblocking_status > rcv_status::initiated) {
+					request = comm.Irecv(data, count, MPI_BYTE, MPI_ANY_SOURCE, tag);
+					nonblocking_status = rcv_status::initiated;
+				}
+				
+				return request.Test(status);		
       }
       
     };
@@ -88,31 +92,12 @@ class mpi_proxy {
 			for(int i=rank+1; i<size; i++)
 				send(data, i, tag, comm);
 		}
+		
+		inline void barrier(const MPI::Intracomm& comm) {
+			comm.Barrier();
+		}
     
-    MPI::Status recv(void* data, const int count, const int tag, const MPI::Intracomm& comm) {
-			#ifdef DEBUG
-			std::cout<<comm.Get_rank()<<" want to rcv "<<std::endl;
-			#endif
-      std::unique_lock<std::mutex> global_add_lock(data_map_mutex);
-      data_map.emplace(std::piecewise_construct,
-        std::forward_as_tuple(tag),
-        std::forward_as_tuple(data, count, (MPI::Intracomm&)comm));
-      global_add_lock.unlock();
-      
-      std::mutex mutex;
-      std::unique_lock<std::mutex> local_lock(mutex);
-      
-      data_map[tag].wait(local_lock);
-      #ifdef DEBUG
-      std::cout<<comm.Get_rank()<<" rcv continue "<<std::endl;
-      #endif
-      auto status = data_map[tag].status;
-      
-      std::unique_lock<std::mutex> global_rm_lock(data_map_mutex);
-			data_map.erase(tag);
-			
-      return status;
-    }
+    MPI::Status recv(void* data, const int count, const int tag, const MPI::Intracomm& comm);
     
     inline void run() {
       l_thread = std::thread([&]()->void {
@@ -125,4 +110,3 @@ class mpi_proxy {
 
 }
 #endif
-

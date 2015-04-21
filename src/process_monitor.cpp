@@ -46,7 +46,7 @@ void process_monitor::add(distributed_mutex& mutex) {
 	std::lock_guard<std::mutex> guard(l_mutex);
 	
 	d_mutexes.emplace(mutex.resource_id, mutex);
-	mutex.p_monitor=this;
+	mutex.p_monitor = this;
 	mutex.waiting_for_respose.resize(comm.Get_size());
 }
 

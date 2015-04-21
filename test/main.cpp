@@ -4,6 +4,7 @@
 #include <thread>
 #include <chrono>
 #include <mutex>
+#include <cstdlib>
 
 #include "../src/distributed_monitor.hpp"
 
@@ -23,7 +24,7 @@ class simple_buffer_t {
     mpi_data_t(bool is_push, value_t value): is_push(is_push), value(value) { }
     mpi_data_t() { }
   };
-	public:
+	private:
     int internal_mpi_update_tag;
 		int internal_mpi_ack_tag;
     const MPI::Intracomm& comm = MPI::COMM_WORLD;
@@ -32,7 +33,8 @@ class simple_buffer_t {
     std::thread update_thread;
     
     std::queue<value_t> data;
-	
+   
+	public:
 		simple_buffer_t(int tag, int tag2): internal_mpi_update_tag(tag), internal_mpi_ack_tag(tag2), d_mutex(tag) {
 			monitor.add(d_mutex);
       
@@ -80,11 +82,10 @@ class simple_buffer_t {
      * 
      * MPI guarantee fifo link order only in the same communicator.
      */
-    void run_update_thread() {
+    inline void run_update_thread() {
       mpi_data_t mpi_data;
       MPI::Status status = monitor.proxy.recv(&mpi_data, sizeof(mpi_data), internal_mpi_update_tag, comm);
       
-      std::cout<<comm.Get_rank()<<" run_update_thread rcv from"<< status.Get_source() <<std::endl;
       ///update data
       if(mpi_data.is_push)
         data.push(mpi_data.value);
@@ -112,9 +113,9 @@ class simple_buffer_t {
 int application_thread(int&, char**&);
 
 int main(int argc, char** argv) {
-	
 	const auto mpi_expected_level = MPI_THREAD_FUNNELED; //MPI_THREAD_MULTIPLE;
 	const auto mpi_provided_level = MPI::Init_thread(argc, argv, mpi_expected_level);
+	
 	if(mpi_provided_level < mpi_expected_level) {
 		std::cout<<"expected thread level: "<<mpi_expected_level<<", provided: "<<mpi_provided_level<<std::endl;
 		
@@ -131,23 +132,24 @@ int main(int argc, char** argv) {
 
 int application_thread(int& argc, char**& argv) {
 	const auto& comm = MPI::COMM_WORLD;
-	std::cout<<"Hello"<<std::endl;
+	std::srand(std::time(0));
+	std::cout<<comm.Get_rank()<<"Hello"<<std::endl;
 	
-	simple_buffer_t<int> buffer(11, 12);
-	comm.Barrier();
-	std::cout<<"Hello2"<<std::endl;
-	
-	if(comm.Get_rank()==1)
+	{
+		simple_buffer_t<int> buffer(11, 12);
+		monitor.proxy.barrier(comm);
+		std::cout<<comm.Get_rank()<<"After barrier"<<std::endl;
+		
 		buffer.push(comm.Get_rank());
 		
-	//std::this_thread::sleep_for(std::chrono::seconds(1));
-  if(comm.Get_rank()==2) 
+		std::this_thread::sleep_for(std::chrono::seconds(comm.Get_size()-comm.Get_rank()+1)); 
 		buffer.get();
-  
-	std::cout<<"Bye"<<std::endl;
+	}
+		
+	std::cout<<comm.Get_rank()<<"Bye"<<std::endl;
 
 	while(true)
-		std::this_thread::sleep_for(std::chrono::seconds(10));
+		std::this_thread::sleep_for(std::chrono::seconds(100));
 	
 	return EXIT_SUCCESS;
 }
